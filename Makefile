@@ -9,4 +9,4 @@ exec   : ${OBJ1}  Makefile
 	gfortran -c $<
 
 clean :
-	rm *.o *.mod
+	rm *.o *.mod  *.xyz exec

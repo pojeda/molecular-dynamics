@@ -120,6 +120,16 @@ CHARACTER*40 NAME4
 
         CALL INITIALIZE
 
+        OPEN(88,FILE='coor6.dat',STATUS='UNKNOWN')
+                   DO P=1,NUM_RES
+                        READ(88,*) PARTICLE(P)%COOR(1),&
+                        PARTICLE(P)%COOR(2),PARTICLE(P)%COOR(3)
+                   ENDDO
+        CLOSE(88)
+
+        CALL FORCES
+
+        write(6,*) 'Potential Energy', POT_ENER
 
         OPEN(88,FILE='KOORDINATEN_1T.xyz',STATUS='UNKNOWN')
 
@@ -133,36 +143,36 @@ CHARACTER*40 NAME4
 
 !MAIN PART OF MOLECULAR DINAMICS
 
-        DO NSTEP=1,6000000
-
-!               CALL WRITE_COOR
-               CALL UPDATE_COOR_LEAP_FROG_BERENDSEN
-
-               IF(MOD(NSTEP,100000).EQ.0) THEN
-
-                   WRITE(6,*) TEMP, POT_ENER
-
-                   WRITE(88,*) NUM_RES
-                   WRITE(88,*) '  '
-                   DO P=1,NUM_RES
-                        WRITE(88,*) 'C', 0.25*PARTICLE_FOLDED(P)%COOR(1), &
-                        0.25*PARTICLE_FOLDED(P)%COOR(2),0.25*PARTICLE_FOLDED(P)%COOR(3)
-                   ENDDO
-               ENDIF
-
-               IF(MOD(NSTEP,10000000) .EQ. 0 ) THEN
-                      CALL WRITE_WANG_LANDAU_MD_HIST
-                      CALL RE_INITIALIZE
-               ENDIF
-
-               IF(FACT_F < 0.0004) THEN
-                     IF(MOD(NSTEP,3000000) .EQ. 0 ) THEN
-                      !CALL WRITE_WANG_LANDAU_MD_HIST
-                         CALL RE_INITIALIZE
-                     ENDIF
-               ENDIF
-
-	 ENDDO
+!        DO NSTEP=1,6000000
+!
+!!               CALL WRITE_COOR
+!               CALL UPDATE_COOR_LEAP_FROG_BERENDSEN
+!
+!               IF(MOD(NSTEP,100000).EQ.0) THEN
+!
+!                   WRITE(6,*) TEMP, POT_ENER
+!
+!                   WRITE(88,*) NUM_RES
+!                   WRITE(88,*) '  '
+!                   DO P=1,NUM_RES
+!                        WRITE(88,*) 'C', 0.25*PARTICLE_FOLDED(P)%COOR(1), &
+!                        0.25*PARTICLE_FOLDED(P)%COOR(2),0.25*PARTICLE_FOLDED(P)%COOR(3)
+!                   ENDDO
+!               ENDIF
+!
+!               IF(MOD(NSTEP,10000000) .EQ. 0 ) THEN
+!                      CALL WRITE_WANG_LANDAU_MD_HIST
+!                      CALL RE_INITIALIZE
+!               ENDIF
+!
+!               IF(FACT_F < 0.0004) THEN
+!                     IF(MOD(NSTEP,3000000) .EQ. 0 ) THEN
+!                      !CALL WRITE_WANG_LANDAU_MD_HIST
+!                         CALL RE_INITIALIZE
+!                     ENDIF
+!               ENDIF
+!
+!	 ENDDO
         CLOSE(88)
 
 !         Activate WL sampling
