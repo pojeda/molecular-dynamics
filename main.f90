@@ -6,14 +6,16 @@ IMPLICIT NONE
 INTEGER, PARAMETER  :: NUM_RES=30                       !NUMBER OF AMINOACIDS IN EACH SEQUENCE
 INTEGER, PARAMETER  :: K4B=SELECTED_INT_KIND(9)
 INTEGER, PARAMETER  :: DP = SELECTED_REAL_KIND(12, 60)
-INTEGER, PARAMETER  :: TIME=9000                        !TIME OF SIMULATION
+INTEGER, PARAMETER  :: TIME=90000                        !TIME OF SIMULATION
 INTEGER, SAVE       :: NSTEP
 INTEGER             :: CLASE(NUM_RES)                   !SEQUENCES OF AMINOACIDS
 INTEGER             :: I,J,K,L,M
 INTEGER, PARAMETER  :: SECU=0                           !THE NUMBER OF SEQUENCE                            
 REAL(DP),PARAMETER  :: PI=3.141592653589793D0
-REAL(DP),PARAMETER  :: DT=0.001                         !TIME STEP
-REAL(DP),PARAMETER  :: BOXL=100.0                       !BOX SIZE=BOXL 
+REAL(DP),PARAMETER  :: DT=0.0001D0                       !TIME STEP
+REAL(DP)            :: DT2=DT*DT                        !TIME STEP SQUARED
+REAL(DP)            :: DTP5=0.5D0*DT                    !TIME STEP HALFED
+REAL(DP),PARAMETER  :: BOXL=100.0D0                     !BOX SIZE=BOXL 
 REAL(DP),PARAMETER  :: GAMMA=1.0                        !GAMMA=6.5*6.0*PI FROM STOKES LAW 
 REAL(DP),PARAMETER  :: TEMP1=9000.0D0 , TEMP2=500.0D0       !TWO TEMPERATURES OF THE SYSTEM
 REAL(DP),PARAMETER  :: KBT_CONST = 0.5D0                  ! KB * T 
@@ -22,8 +24,10 @@ REAL(DP)            :: EPS_CONST(4,4)                   !ARRAY FOR EPSILON
 REAL(DP)            :: SIGMA_CONST(NUM_RES,NUM_RES)     !ARRAY OF SIGMA
 CHARACTER*1         :: AMINO(4)=(/'S','C','P','N'/)     !ALPHABET OF FOUR LETTERS        
 REAL(DP)            :: POT_ENER
+REAL(DP)            :: KIN_ENER
 
 
+REAL(DP),SAVE       :: O = 1, N = 1
 
 REAL(DP)            :: XDIS(NUM_RES,NUM_RES),YDIS(NUM_RES,NUM_RES),ZDIS(NUM_RES,NUM_RES)
 REAL(DP)            :: DIS(NUM_RES,NUM_RES),RDN(NUM_RES,3)
@@ -90,6 +94,7 @@ USE Ziggurat
 REAL                :: T1, T2,TT1, TT2
 INTEGER             :: IMAC
 INTEGER             :: P
+INTEGER             :: TMP
 
 
 REAL(DP)            :: ENER
@@ -144,11 +149,19 @@ CHARACTER*40 NAME4
 
 
 !MAIN PART OF MOLECULAR DINAMICS
-
-!        DO NSTEP=1,6000000
+        N = 2
+        DO NSTEP=1,6000
 !
 !!               CALL WRITE_COOR
 !               CALL UPDATE_COOR_LEAP_FROG_BERENDSEN
+               CALL FORCES
+               CALL UPDATE_VEL_LEAP_FROG
+
+               TMP = O
+               O = N 
+               N = TMP
+
+        write(6,*) 'Pot Energy=', POT_ENER,'Total Energy=', POT_ENER + KIN_ENER
 !
 !               IF(MOD(NSTEP,100000).EQ.0) THEN
 !
@@ -174,7 +187,7 @@ CHARACTER*40 NAME4
 !                     ENDIF
 !               ENDIF
 !
-!	 ENDDO
+	 ENDDO
         CLOSE(88)
 
 !         Activate WL sampling

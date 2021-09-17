@@ -103,7 +103,8 @@ INTEGER             :: P
 	         PARTICLE(P)%GRADZ(1)=  0.0
              ENDDO
 
-             POT_ENER = 0.0           
+             POT_ENER = 0.0D0         
+             KIN_ENER = 0.0D0           
 
 END SUBROUTINE INITIALIZE_GRAD
 
