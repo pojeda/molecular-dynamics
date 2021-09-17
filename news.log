@@ -1,0 +1,19 @@
+3.Feb.2020
+    * The permissions of the files were changed by removing the executable 
+    rights on all users.
+
+    Note: although apparently the permissions were changed on the local repo,
+    they didn't change on the remote, because when I cloned the remote, the
+    files had the old permissions.
+
+
+TODO list:
+    * Check compilation options: 
+            -compilers 
+            -optimization flags
+    
+    * What parts of the code can be parallelized? 
+
+    * Profiling tools?
+
+    * Possible integrators
