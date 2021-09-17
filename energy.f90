@@ -15,9 +15,9 @@ ENDDO
 !THE DISTANCES BETWEEN AMINO ACIDS ARE COMPUTED HERE 
 DO 10 I=1,NUM_RES-1                                    
   DO 20 J=I+1,NUM_RES                                     
-    FDUMMY1=PARTICLE(I)%COOR(1)-PARTICLE(J)%COOR(1)                          
-    FDUMMY2=PARTICLE(I)%COOR(2)-PARTICLE(J)%COOR(2)                          
-    FDUMMY3=PARTICLE(I)%COOR(3)-PARTICLE(J)%COOR(3)                           
+    FDUMMY1=PARTICLE(I)%COORX(1)-PARTICLE(J)%COORX(1)                          
+    FDUMMY2=PARTICLE(I)%COORY(1)-PARTICLE(J)%COORY(1)                          
+    FDUMMY3=PARTICLE(I)%COORZ(1)-PARTICLE(J)%COORZ(1)                           
             
 
     XDIS(I,J)=FDUMMY1
@@ -69,19 +69,19 @@ DO I=1,NUM_RES-2
 	   ENER1=ENER1+EPS_CONST(K,L)*FDUMMYE                  ! ENERGY = EPSILON*[(SIGMA/R)^12 - (SIGMA/R)^6 ]
 	   FTERM=(12.*FDUMMY5-6.*FDUMMY4)*FDUMMYD              ! FORCE = -DV/DR = [12*(SIGMA/R)^12 - 6*(SIGMA/R)^6 ]*(1/R^2)
 
-           PARTICLE(I)%GRAD(1)=PARTICLE(I)%GRAD(1)+EPS_CONST(K,L)*FTERM*XDIS(I,J)   ! X COMPONENT OF THE GRADIENT
-           PARTICLE(I)%GRAD(2)=PARTICLE(I)%GRAD(2)+EPS_CONST(K,L)*FTERM*YDIS(I,J)   ! Y COMPONENT OF THE GRADIENT
-           PARTICLE(I)%GRAD(3)=PARTICLE(I)%GRAD(3)+EPS_CONST(K,L)*FTERM*ZDIS(I,J)   ! Z COMPONENT OF THE GRADIENT
-           PARTICLE(J)%GRAD(1)=PARTICLE(J)%GRAD(1)-EPS_CONST(K,L)*FTERM*XDIS(I,J)   ! X COMPONENT OF THE GRADIENT
-           PARTICLE(J)%GRAD(2)=PARTICLE(J)%GRAD(2)-EPS_CONST(K,L)*FTERM*YDIS(I,J)   ! Y COMPONENT OF THE GRADIENT
-           PARTICLE(J)%GRAD(3)=PARTICLE(J)%GRAD(3)-EPS_CONST(K,L)*FTERM*ZDIS(I,J)   ! Z COMPONENT OF THE GRADIENT
+           PARTICLE(I)%GRADX(1)=PARTICLE(I)%GRADX(1)+EPS_CONST(K,L)*FTERM*XDIS(I,J)   ! X COMPONENT OF THE GRADIENT
+           PARTICLE(I)%GRADY(1)=PARTICLE(I)%GRADY(1)+EPS_CONST(K,L)*FTERM*YDIS(I,J)   ! Y COMPONENT OF THE GRADIENT
+           PARTICLE(I)%GRADZ(1)=PARTICLE(I)%GRADZ(1)+EPS_CONST(K,L)*FTERM*ZDIS(I,J)   ! Z COMPONENT OF THE GRADIENT
+           PARTICLE(J)%GRADX(1)=PARTICLE(J)%GRADX(1)-EPS_CONST(K,L)*FTERM*XDIS(I,J)   ! X COMPONENT OF THE GRADIENT
+           PARTICLE(J)%GRADY(1)=PARTICLE(J)%GRADY(1)-EPS_CONST(K,L)*FTERM*YDIS(I,J)   ! Y COMPONENT OF THE GRADIENT
+           PARTICLE(J)%GRADZ(1)=PARTICLE(J)%GRADZ(1)-EPS_CONST(K,L)*FTERM*ZDIS(I,J)   ! Z COMPONENT OF THE GRADIENT
 
      ENDDO
 
 ENDDO
 
 DO I=1,NUM_RES
-           write(6,*) PARTICLE(I)%GRAD(1),PARTICLE(I)%GRAD(2),PARTICLE(I)%GRAD(3)
+           write(6,*) PARTICLE(I)%GRADX(1),PARTICLE(I)%GRADY(1),PARTICLE(I)%GRADZ(1)
 ENDDO
 POT_ENER = POT_ENER + ENER1
 
@@ -115,22 +115,22 @@ DO I=2,NUM_RES-1
       FDUMMY2=FDUMMY1*FDUMMY1
       ENER2=ENER2+FDUMMY2
       FDUMMY4=(DIS(I,I-1)-R_CERO)
-      PARTICLE(I)%GRAD(1)=PARTICLE(I)%GRAD(1)-FDUMMY3*XDIS(I,I+1)*FDUMMY1/DIS(I,I+1) - FDUMMY3*XDIS(I,I-1)*FDUMMY4/DIS(I-1,I)
-      PARTICLE(I)%GRAD(2)=PARTICLE(I)%GRAD(2)-FDUMMY3*YDIS(I,I+1)*FDUMMY1/DIS(I,I+1) - FDUMMY3*YDIS(I,I-1)*FDUMMY4/DIS(I-1,I)
-      PARTICLE(I)%GRAD(3)=PARTICLE(I)%GRAD(3)-FDUMMY3*ZDIS(I,I+1)*FDUMMY1/DIS(I,I+1) - FDUMMY3*ZDIS(I,I-1)*FDUMMY4/DIS(I-1,I)
+      PARTICLE(I)%GRADX(1)=PARTICLE(I)%GRADX(1)-FDUMMY3*XDIS(I,I+1)*FDUMMY1/DIS(I,I+1) - FDUMMY3*XDIS(I,I-1)*FDUMMY4/DIS(I-1,I)
+      PARTICLE(I)%GRADY(1)=PARTICLE(I)%GRADY(1)-FDUMMY3*YDIS(I,I+1)*FDUMMY1/DIS(I,I+1) - FDUMMY3*YDIS(I,I-1)*FDUMMY4/DIS(I-1,I)
+      PARTICLE(I)%GRADZ(1)=PARTICLE(I)%GRADZ(1)-FDUMMY3*ZDIS(I,I+1)*FDUMMY1/DIS(I,I+1) - FDUMMY3*ZDIS(I,I-1)*FDUMMY4/DIS(I-1,I)
 ENDDO
 
 
       FDUMMY1=DIS(1,2)-R_CERO
       FDUMMY2=FDUMMY1*FDUMMY1
       ENER2=ENER2+FDUMMY2
-      PARTICLE(1)%GRAD(1)=PARTICLE(1)%GRAD(1)-FDUMMY3*XDIS(1,2)*FDUMMY1/DIS(1,2)
-      PARTICLE(1)%GRAD(2)=PARTICLE(1)%GRAD(2)-FDUMMY3*YDIS(1,2)*FDUMMY1/DIS(1,2)
-      PARTICLE(1)%GRAD(3)=PARTICLE(1)%GRAD(3)-FDUMMY3*ZDIS(1,2)*FDUMMY1/DIS(1,2)
+      PARTICLE(1)%GRADX(1)=PARTICLE(1)%GRADX(1)-FDUMMY3*XDIS(1,2)*FDUMMY1/DIS(1,2)
+      PARTICLE(1)%GRADY(1)=PARTICLE(1)%GRADY(1)-FDUMMY3*YDIS(1,2)*FDUMMY1/DIS(1,2)
+      PARTICLE(1)%GRADZ(1)=PARTICLE(1)%GRADZ(1)-FDUMMY3*ZDIS(1,2)*FDUMMY1/DIS(1,2)
       FDUMMY1=DIS(NUM_RES,NUM_RES-1)-R_CERO
-      PARTICLE(NUM_RES)%GRAD(1)=PARTICLE(NUM_RES)%GRAD(1)-FDUMMY3*XDIS(NUM_RES,NUM_RES-1)*FDUMMY1/DIS(NUM_RES,NUM_RES-1)
-      PARTICLE(NUM_RES)%GRAD(2)=PARTICLE(NUM_RES)%GRAD(2)-FDUMMY3*YDIS(NUM_RES,NUM_RES-1)*FDUMMY1/DIS(NUM_RES,NUM_RES-1)
-      PARTICLE(NUM_RES)%GRAD(3)=PARTICLE(NUM_RES)%GRAD(3)-FDUMMY3*ZDIS(NUM_RES,NUM_RES-1)*FDUMMY1/DIS(NUM_RES,NUM_RES-1)
+      PARTICLE(NUM_RES)%GRADX(1)=PARTICLE(NUM_RES)%GRADX(1)-FDUMMY3*XDIS(NUM_RES,NUM_RES-1)*FDUMMY1/DIS(NUM_RES,NUM_RES-1)
+      PARTICLE(NUM_RES)%GRADY(1)=PARTICLE(NUM_RES)%GRADY(1)-FDUMMY3*YDIS(NUM_RES,NUM_RES-1)*FDUMMY1/DIS(NUM_RES,NUM_RES-1)
+      PARTICLE(NUM_RES)%GRADZ(1)=PARTICLE(NUM_RES)%GRADZ(1)-FDUMMY3*ZDIS(NUM_RES,NUM_RES-1)*FDUMMY1/DIS(NUM_RES,NUM_RES-1)
 
       POT_ENER = POT_ENER + A_CONST*ENER2
 
@@ -160,126 +160,126 @@ END SUBROUTINE FORCES
 
 
 
-SUBROUTINE CENTER_MASS(CMX,CMY,CMZ)
-
-! SUBROUTINE TO COMPUTE THE CENTER OF MASS FOR "NUM_RES" PARTICLES
-
-! PEDRO OJEDA,  07/MAY/2011
-
-USE PARAMETERS                                  
-             
-REAL(DP)            :: XCM,YCM,ZCM,CMX,CMY,CMZ,DIFF
-
-
-XCM=0.0D0
-
-YCM=0.0D0
-
-ZCM=0.0D0
-
-DO I=1,NUM_RES            
-                                                     
-    XCM= XCM + PARTICLE(I)%COOR(1)               
-                        
-    YCM= YCM + PARTICLE(I)%COOR(2)                
-                       
-    ZCM= ZCM + PARTICLE(I)%COOR(3)                 
-                      
-ENDDO
-
-CMX=XCM/(1.0*NUM_RES)
-CMY=YCM/(1.0*NUM_RES)
-CMZ=ZCM/(1.0*NUM_RES)
-
-IF( ABS(CMX) > 20.0D0 ) THEN
-
-        DO I=1,NUM_RES                  
-                                               
-            PARTICLE(I)%COOR(1)=PARTICLE(I)%COOR(1)-CMX             
-                          
-        ENDDO
-
-        I=CMX
-
-        J=MOD(I,20)
-
-        IF(CMX > 0) THEN
-
-            CMX= -20.0D0+ABS(1.0D0*J)
-
-        ELSE
-
-            CMX=  20.0D0-ABS(1.0D0*J) 
-
-        ENDIF
-
-        DO I=1,NUM_RES                                     
-                            
-            PARTICLE(I)%COOR(1)=PARTICLE(I)%COOR(1)+CMX                       
-                
-        ENDDO
-
-ENDIF
-
-IF( ABS(CMY) > 20.0D0 ) THEN
-
-        DO I=1,NUM_RES                        
-                                         
-            PARTICLE(I)%COOR(2)=PARTICLE(I)%COOR(2)-CMY            
-                           
-        ENDDO
-
-        I=CMY
-
-        J=MOD(I,20)
-
-        IF(CMY > 0) THEN
-
-            CMY= -20.0+ABS(1.0*J)
-
-        ELSE
-
-            CMY=  20.0-ABS(1.0*J) 
-
-        ENDIF
-
-        DO I=1,NUM_RES                                      
-                           
-            PARTICLE(I)%COOR(2)=PARTICLE(I)%COOR(2)+CMY                         
-              
-        ENDDO
-
-ENDIF
-
-IF( ABS(CMZ) > 20.0 ) THEN
-
-        DO I=1,NUM_RES                            
-                                     
-            PARTICLE(I)%COOR(3)=PARTICLE(I)%COOR(3)-CMZ                  
-                     
-        ENDDO
-
-        I=CMZ
-
-        J=MOD(I,20)
-
-        IF(CMZ > 0) THEN
-
-            CMZ= -20.0+ABS(1.0*J)
-
-        ELSE
-
-            CMZ=  20.0-ABS(1.0*J) 
-
-        ENDIF
-
-        DO I=1,NUM_RES                                 
-                                
-            PARTICLE(I)%COOR(3)=PARTICLE(I)%COOR(3)+CMZ                         
-              
-        ENDDO
-
-ENDIF
-
-
-END SUBROUTINE CENTER_MASS
+!SUBROUTINE CENTER_MASS(CMX,CMY,CMZ)
+!
+!! SUBROUTINE TO COMPUTE THE CENTER OF MASS FOR "NUM_RES" PARTICLES
+!
+!! PEDRO OJEDA,  07/MAY/2011
+!
+!USE PARAMETERS                                  
+!             
+!REAL(DP)            :: XCM,YCM,ZCM,CMX,CMY,CMZ,DIFF
+!
+!
+!XCM=0.0D0
+!
+!YCM=0.0D0
+!
+!ZCM=0.0D0
+!
+!DO I=1,NUM_RES            
+!                                                     
+!    XCM= XCM + PARTICLE(I)%COOR(1)               
+!                        
+!    YCM= YCM + PARTICLE(I)%COOR(2)                
+!                       
+!    ZCM= ZCM + PARTICLE(I)%COOR(3)                 
+!                      
+!ENDDO
+!
+!CMX=XCM/(1.0*NUM_RES)
+!CMY=YCM/(1.0*NUM_RES)
+!CMZ=ZCM/(1.0*NUM_RES)
+!
+!IF( ABS(CMX) > 20.0D0 ) THEN
+!
+!        DO I=1,NUM_RES                  
+!                                               
+!            PARTICLE(I)%COOR(1)=PARTICLE(I)%COOR(1)-CMX             
+!                          
+!        ENDDO
+!
+!        I=CMX
+!
+!        J=MOD(I,20)
+!
+!        IF(CMX > 0) THEN
+!
+!            CMX= -20.0D0+ABS(1.0D0*J)
+!
+!        ELSE
+!
+!            CMX=  20.0D0-ABS(1.0D0*J) 
+!
+!        ENDIF
+!
+!        DO I=1,NUM_RES                                     
+!                            
+!            PARTICLE(I)%COOR(1)=PARTICLE(I)%COOR(1)+CMX                       
+!                
+!        ENDDO
+!
+!ENDIF
+!
+!IF( ABS(CMY) > 20.0D0 ) THEN
+!
+!        DO I=1,NUM_RES                        
+!                                         
+!            PARTICLE(I)%COOR(2)=PARTICLE(I)%COOR(2)-CMY            
+!                           
+!        ENDDO
+!
+!        I=CMY
+!
+!        J=MOD(I,20)
+!
+!        IF(CMY > 0) THEN
+!
+!            CMY= -20.0+ABS(1.0*J)
+!
+!        ELSE
+!
+!            CMY=  20.0-ABS(1.0*J) 
+!
+!        ENDIF
+!
+!        DO I=1,NUM_RES                                      
+!                           
+!            PARTICLE(I)%COOR(2)=PARTICLE(I)%COOR(2)+CMY                         
+!              
+!        ENDDO
+!
+!ENDIF
+!
+!IF( ABS(CMZ) > 20.0 ) THEN
+!
+!        DO I=1,NUM_RES                            
+!                                     
+!            PARTICLE(I)%COOR(3)=PARTICLE(I)%COOR(3)-CMZ                  
+!                     
+!        ENDDO
+!
+!        I=CMZ
+!
+!        J=MOD(I,20)
+!
+!        IF(CMZ > 0) THEN
+!
+!            CMZ= -20.0+ABS(1.0*J)
+!
+!        ELSE
+!
+!            CMZ=  20.0-ABS(1.0*J) 
+!
+!        ENDIF
+!
+!        DO I=1,NUM_RES                                 
+!                                
+!            PARTICLE(I)%COOR(3)=PARTICLE(I)%COOR(3)+CMZ                         
+!              
+!        ENDDO
+!
+!ENDIF
+!
+!
+!END SUBROUTINE CENTER_MASS

@@ -39,7 +39,9 @@ REAL(DP), SAVE      :: TEMP0
 
 
 TYPE PARTICLE_STRUCTURE
-REAL(DP)            :: COOR(3),VEL(3), GRAD(3)
+REAL(DP)            :: COORX(2),COORY(2),COORZ(2)
+REAL(DP)            :: VELX(2),VELY(2),VELZ(2)
+REAL(DP)            :: GRADX(2),GRADY(2),GRADZ(2)
 REAL(DP)            :: MASS
 REAL(DP)            :: CHARGE
 REAL(DP)            :: INERTIA
@@ -91,8 +93,8 @@ INTEGER             :: P
 
 
 REAL(DP)            :: ENER
-REAL(DP)            :: HIST(-2000:2000),TRANS(-2000:0,-2000:0),CMX,CMY,CMZ
-INTEGER	            :: OBIN,EBIN,NEBIN
+!REAL(DP)            :: HIST(-2000:2000),TRANS(-2000:0,-2000:0),CMX,CMY,CMZ
+!INTEGER	            :: OBIN,EBIN,NEBIN
 
 CHARACTER*40 NAME
 CHARACTER*40 NAME4
@@ -122,8 +124,8 @@ CHARACTER*40 NAME4
 
         OPEN(88,FILE='min_0.dat',STATUS='UNKNOWN')
                    DO P=1,NUM_RES
-                        READ(88,*) PARTICLE(P)%COOR(1),&
-                        PARTICLE(P)%COOR(2),PARTICLE(P)%COOR(3)
+                        READ(88,*) PARTICLE(P)%COORX(1),&
+                        PARTICLE(P)%COORY(1),PARTICLE(P)%COORZ(1)
                    ENDDO
         CLOSE(88)
 
@@ -133,12 +135,12 @@ CHARACTER*40 NAME4
 
         OPEN(88,FILE='KOORDINATEN_1T.xyz',STATUS='UNKNOWN')
 
-                   WRITE(88,*) NUM_RES
-                   WRITE(88,*) '  '
-                   DO P=1,NUM_RES
-                        WRITE(88,*) 'C', 0.25*PARTICLE(P)%COOR(1),&
-                        0.25*PARTICLE(P)%COOR(2),0.25*PARTICLE(P)%COOR(3)
-                   ENDDO
+!                   WRITE(88,*) NUM_RES
+!                   WRITE(88,*) '  '
+!                   DO P=1,NUM_RES
+!                        WRITE(88,*) 'C', 0.25*PARTICLE(P)%COOR(1),&
+!                        0.25*PARTICLE(P)%COOR(2),0.25*PARTICLE(P)%COOR(3)
+!                   ENDDO
 
 
 !MAIN PART OF MOLECULAR DINAMICS
