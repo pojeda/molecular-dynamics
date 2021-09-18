@@ -27,7 +27,7 @@ REAL(DP)            :: POT_ENER
 REAL(DP)            :: KIN_ENER
 
 
-REAL(DP),SAVE       :: O = 1, N = 1
+INTEGER,SAVE        :: O = 1, N = 1
 
 REAL(DP)            :: XDIS(NUM_RES,NUM_RES),YDIS(NUM_RES,NUM_RES),ZDIS(NUM_RES,NUM_RES)
 REAL(DP)            :: DIS(NUM_RES,NUM_RES),RDN(NUM_RES,3)
@@ -137,6 +137,13 @@ CHARACTER*40 NAME4
         CALL FORCES
 
         write(6,*) 'Potential Energy', POT_ENER
+        write(6,*) 'N=', N
+
+        DO P=1,NUM_RES
+             WRITE(6,*) PARTICLE(P)%GRADX(N),&
+             PARTICLE(P)%GRADY(N),PARTICLE(P)%GRADZ(N)
+        ENDDO
+        stop
 
         OPEN(88,FILE='KOORDINATEN_1T.xyz',STATUS='UNKNOWN')
 
@@ -150,12 +157,13 @@ CHARACTER*40 NAME4
 
 !MAIN PART OF MOLECULAR DINAMICS
         N = 2
-        DO NSTEP=1,6000
+        DO NSTEP=1,60000
 !
 !!               CALL WRITE_COOR
 !               CALL UPDATE_COOR_LEAP_FROG_BERENDSEN
                CALL FORCES
-               CALL UPDATE_VEL_LEAP_FROG
+             WRITE(6,*) PARTICLE(1)%GRADX(O),PARTICLE(1)%GRADY(O),PARTICLE(1)%GRADZ(O)
+               CALL UPDATE_VEL_VERLET
 
                TMP = O
                O = N 

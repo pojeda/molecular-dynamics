@@ -13,3 +13,7 @@ More information of the model:
       * Description of algorithms:
 
       * Examples
+
+Compiler:
+
+ml foss/2021a

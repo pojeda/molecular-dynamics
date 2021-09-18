@@ -8,10 +8,10 @@ USE Ziggurat
 
 INTEGER             :: P
 
-             DO 10 P=1,NUM_RES
-	         PARTICLE(P)%COORX(1)=  (P-15)*6.5
-	         PARTICLE(P)%COORY(1)=  0.0
-	         PARTICLE(P)%COORZ(1)=  0.0
+             DO P=1,NUM_RES
+	         PARTICLE(P)%COORX(1)=  (P-15)*6.5D0
+	         PARTICLE(P)%COORY(1)=  0.0D0
+	         PARTICLE(P)%COORZ(1)=  0.0D0
 
 	         PARTICLE(P)%COORX(2)=  PARTICLE(P)%COORX(1)
 	         PARTICLE(P)%COORY(2)=  PARTICLE(P)%COORY(1)
@@ -22,28 +22,28 @@ INTEGER             :: P
 	         PARTICLE_FOLDED(P)%COORZ(1)=  PARTICLE(P)%COORZ(1)
 
 
-	         PARTICLE(P)%VELX(1)=  2.0*UNI()-1.0
-	         PARTICLE(P)%VELY(1)=  2.0*UNI()-1.0
-	         PARTICLE(P)%VELZ(1)=  2.0*UNI()-1.0
+	         PARTICLE(P)%VELX(1)=  2.0D0*UNI()-1.0D0
+	         PARTICLE(P)%VELY(1)=  2.0D0*UNI()-1.0D0
+	         PARTICLE(P)%VELZ(1)=  2.0D0*UNI()-1.0D0
 
 	         PARTICLE(P)%VELX(2)=  PARTICLE(P)%VELX(1)
 	         PARTICLE(P)%VELY(2)=  PARTICLE(P)%VELY(1)
 	         PARTICLE(P)%VELZ(2)=  PARTICLE(P)%VELZ(1)
 
-	         PARTICLE(P)%GRADX(1)=  0.0
-	         PARTICLE(P)%GRADY(1)=  0.0
-	         PARTICLE(P)%GRADZ(1)=  0.0
+	         PARTICLE(P)%GRADX(1)=  0.0D0
+	         PARTICLE(P)%GRADY(1)=  0.0D0
+	         PARTICLE(P)%GRADZ(1)=  0.0D0
 
 	         PARTICLE(P)%GRADX(2)=  PARTICLE(P)%GRADX(1)
 	         PARTICLE(P)%GRADY(2)=  PARTICLE(P)%GRADY(1)
 	         PARTICLE(P)%GRADZ(2)=  PARTICLE(P)%GRADZ(1)
 
-	         PARTICLE(P)%MASS=  1.0
+	         PARTICLE(P)%MASS=  1.0D0
 
-10           CONTINUE
+             ENDDO
 
-             POT_ENER = 0.0
-             BOXI = 1.0 / BOXL
+             POT_ENER = 0.0D0
+             BOXI = 1.0D0 / BOXL
 
 END SUBROUTINE INITIALIZE
 
@@ -98,9 +98,9 @@ USE PARAMETERS
 INTEGER             :: P
 
              DO P=1,NUM_RES
-	         PARTICLE(P)%GRADX(1)=  0.0
-	         PARTICLE(P)%GRADY(1)=  0.0
-	         PARTICLE(P)%GRADZ(1)=  0.0
+	         PARTICLE(P)%GRADX(N)=  0.0D0
+	         PARTICLE(P)%GRADY(N)=  0.0D0
+	         PARTICLE(P)%GRADZ(N)=  0.0D0
              ENDDO
 
              POT_ENER = 0.0D0         
