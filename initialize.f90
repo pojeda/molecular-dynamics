@@ -42,8 +42,8 @@ INTEGER             :: P
 
              ENDDO
 
-             POT_ENER = 0.0D0
-             BOXI = 1.0D0 / BOXL
+             POT_ENER = 0.0
+             BOXI = 1.0 / BOXL
 
 END SUBROUTINE INITIALIZE
 
@@ -98,9 +98,9 @@ USE PARAMETERS
 INTEGER             :: P
 
              DO P=1,NUM_RES
-	         PARTICLE(P)%GRADX(N)=  0.0D0
-	         PARTICLE(P)%GRADY(N)=  0.0D0
-	         PARTICLE(P)%GRADZ(N)=  0.0D0
+	         PARTICLE(P)%GRADX(1)=  0.0
+	         PARTICLE(P)%GRADY(1)=  0.0
+	         PARTICLE(P)%GRADZ(1)=  0.0
              ENDDO
 
              POT_ENER = 0.0D0         

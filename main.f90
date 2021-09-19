@@ -136,14 +136,14 @@ CHARACTER*40 NAME4
 
         CALL FORCES
 
-        write(6,*) 'Potential Energy', POT_ENER
-        write(6,*) 'N=', N
+!        write(6,*) 'Potential Energy', POT_ENER
+!        write(6,*) 'N=', N
 
-        DO P=1,NUM_RES
-             WRITE(6,*) PARTICLE(P)%GRADX(N),&
-             PARTICLE(P)%GRADY(N),PARTICLE(P)%GRADZ(N)
-        ENDDO
-        stop
+!        DO P=1,NUM_RES
+!             WRITE(6,*) PARTICLE(P)%GRADX(N),&
+!             PARTICLE(P)%GRADY(N),PARTICLE(P)%GRADZ(N)
+!        ENDDO
+!        stop
 
         OPEN(88,FILE='KOORDINATEN_1T.xyz',STATUS='UNKNOWN')
 
@@ -162,8 +162,7 @@ CHARACTER*40 NAME4
 !!               CALL WRITE_COOR
 !               CALL UPDATE_COOR_LEAP_FROG_BERENDSEN
                CALL FORCES
-             WRITE(6,*) PARTICLE(1)%GRADX(O),PARTICLE(1)%GRADY(O),PARTICLE(1)%GRADZ(O)
-               CALL UPDATE_VEL_VERLET
+               CALL UPDATE_VEL_LEAP_FROG
 
                TMP = O
                O = N 
