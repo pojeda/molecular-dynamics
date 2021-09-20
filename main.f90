@@ -162,7 +162,8 @@ CHARACTER*40 NAME4
 !!               CALL WRITE_COOR
 !               CALL UPDATE_COOR_LEAP_FROG_BERENDSEN
                CALL FORCES
-               CALL UPDATE_VEL_LEAP_FROG
+!             WRITE(6,*) PARTICLE(1)%GRADX(O),PARTICLE(1)%GRADY(O),PARTICLE(1)%GRADZ(O)
+               CALL UPDATE_VEL_VERLET
 
                TMP = O
                O = N 
