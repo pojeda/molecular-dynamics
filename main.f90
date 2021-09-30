@@ -3,40 +3,39 @@ MODULE PARAMETERS
 ! PEDRO OJEDA,  07/MAY/2011
 
 IMPLICIT NONE
-INTEGER, PARAMETER  :: NUM_RES=30                       !NUMBER OF AMINOACIDS IN EACH SEQUENCE
-INTEGER, PARAMETER  :: K4B=SELECTED_INT_KIND(9)
-INTEGER, PARAMETER  :: DP = SELECTED_REAL_KIND(12, 60)
-INTEGER, PARAMETER  :: TIME=90000                       !TIME OF SIMULATION
-INTEGER, SAVE       :: NSTEP
-INTEGER             :: CLASE(NUM_RES)                   !SEQUENCES OF AMINOACIDS
-INTEGER             :: I,J,K,L,M
-INTEGER, PARAMETER  :: SECU=0                           !THE NUMBER OF SEQUENCE                            
-REAL(DP),PARAMETER  :: PI=3.141592653589793D0           !PI CONSTANT
-REAL(DP),PARAMETER  :: DT=0.0001D0                      !TIME STEP
-REAL(DP)            :: DT2=DT*DT                        !TIME STEP SQUARED
-REAL(DP)            :: DTP5=0.5D0*DT                    !TIME STEP HALFED
-REAL(DP),PARAMETER  :: BOXL=100.0D0                     !BOX SIZE=BOXL 
-REAL(DP),PARAMETER  :: KBT_CONST = 0.5D0                ! KB * T 
-REAL(DP)            :: BOXI                             !1.0/BOXL 
-REAL(DP)            :: EPS_CONST(4,4)                   !ARRAY FOR EPSILON
-REAL(DP)            :: SIGMA_CONST(NUM_RES,NUM_RES)     !ARRAY OF SIGMA
-CHARACTER*1         :: AMINO(4)=(/'S','C','P','N'/)     !ALPHABET OF FOUR LETTERS        
-REAL(DP)            :: POT_ENER
-REAL(DP)            :: KIN_ENER
-
-INTEGER,SAVE        :: O = 1, N = 1                     !INDICES FOR OLD AND NEW CONFIGURATIONS
-
-TYPE PARTICLE_STRUCTURE
-REAL(DP)            :: COORX,COORY,COORZ
-REAL(DP)            :: VELX,VELY,VELZ
-REAL(DP)            :: GRADX(2),GRADY(2),GRADZ(2)
-REAL(DP)            :: MASS
-REAL(DP)            :: CHARGE
-REAL(DP)            :: INERTIA
-END TYPE PARTICLE_STRUCTURE
-
-TYPE (PARTICLE_STRUCTURE), SAVE, DIMENSION(NUM_RES) :: PARTICLE
-TYPE (PARTICLE_STRUCTURE), SAVE, DIMENSION(NUM_RES) :: PARTICLE_FOLDED
+   INTEGER, PARAMETER  :: NUM_RES=30                       !NUMBER OF AMINOACIDS IN EACH SEQUENCE
+   INTEGER, PARAMETER  :: DP = SELECTED_REAL_KIND(12, 60)
+   INTEGER, PARAMETER  :: TIME=90000                       !TIME OF SIMULATION
+   INTEGER, SAVE       :: NSTEP
+   INTEGER             :: CLASE(NUM_RES)                   !SEQUENCES OF AMINOACIDS
+   INTEGER             :: I,J,K,L,M
+   INTEGER, PARAMETER  :: SECU=0                           !THE NUMBER OF SEQUENCE                            
+   REAL(DP),PARAMETER  :: PI=3.141592653589793D0           !PI CONSTANT
+   REAL(DP),PARAMETER  :: DT=0.0001D0                      !TIME STEP
+   REAL(DP)            :: DT2=DT*DT                        !TIME STEP SQUARED
+   REAL(DP)            :: DTP5=0.5D0*DT                    !TIME STEP HALFED
+   REAL(DP),PARAMETER  :: BOXL=100.0D0                     !BOX SIZE=BOXL 
+   REAL(DP),PARAMETER  :: KBT_CONST = 0.5D0                ! KB * T 
+   REAL(DP)            :: BOXI                             !1.0/BOXL 
+   REAL(DP)            :: EPS_CONST(4,4)                   !ARRAY FOR EPSILON
+   REAL(DP)            :: SIGMA_CONST(NUM_RES,NUM_RES)     !ARRAY OF SIGMA
+   CHARACTER*1         :: AMINO(4)=(/'S','C','P','N'/)     !ALPHABET OF FOUR LETTERS        
+   REAL(DP)            :: POT_ENER
+   REAL(DP)            :: KIN_ENER
+   
+   INTEGER,SAVE        :: O = 1, N = 1                     !INDICES FOR OLD AND NEW CONFIGURATIONS
+   
+   TYPE PARTICLE_STRUCTURE
+   REAL(DP)            :: COORX,COORY,COORZ
+   REAL(DP)            :: VELX,VELY,VELZ
+   REAL(DP)            :: GRADX(2),GRADY(2),GRADZ(2)
+   REAL(DP)            :: MASS
+   REAL(DP)            :: CHARGE
+   REAL(DP)            :: INERTIA
+   END TYPE PARTICLE_STRUCTURE
+   
+   TYPE (PARTICLE_STRUCTURE), SAVE, DIMENSION(NUM_RES) :: PARTICLE
+   TYPE (PARTICLE_STRUCTURE), SAVE, DIMENSION(NUM_RES) :: PARTICLE_FOLDED
 END MODULE PARAMETERS
 
 
@@ -50,12 +49,10 @@ INTEGER             :: IMAC
 INTEGER             :: P
 INTEGER             :: TMP
 
-
 REAL(DP)            :: ENER
 
 CHARACTER*40 NAME
 CHARACTER*40 NAME4
-
 
 IMAC=-35000
 CALL ZIGSET( IMAC )
@@ -172,10 +169,8 @@ SUBROUTINE SPRING
 
 USE PARAMETERS
 
-REAL(DP)            :: FDUMMY1,FDUMMY2,FDUMMY3,FDUMMY4,FDUMMY5
-REAL(DP)            :: FDUMMY0,FDUMMYD,FDUMMYE
-REAL(DP)            :: FTERM
-REAL(DP)            :: ENER2,ENER
+REAL(DP)            :: FDUMMY1,FDUMMY2,FDUMMY3,FDUMMY4
+REAL(DP)            :: ENER2
 REAL(DP)            :: R_CERO,A_CONST
 REAL(DP)            :: DISX,DISY,DISZ,DISPX,DISD,DISPY,DISPZ,DISPD
 
