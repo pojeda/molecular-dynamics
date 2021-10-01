@@ -1,24 +1,27 @@
 
 struct part_struct
-     x::Float64
-     y::Float64
-     z::Float64
+     coorx::Float64
+     coory::Float64
+     coorz::Float64
+     velx::Float64
+     vely::Float64
+     velz::Float64
+     gradx::Vector{Float64}
+     grady::Vector{Float64}
+     gradz::Vector{Float64}
 end 
-
-#outer constructor
-part_struct() = part_struct(rand(),rand(),rand())
 
 #create empty array
 num_res = 10
 particle = Array{part_struct,1}(undef, num_res)
 
-#initialize array
+##initialize array
 for i = 1:num_res
-     particle[i] = part_struct()
+      particle[i] = part_struct( rand(), rand(), rand(), rand(), rand(), rand(), [rand(); rand()], [rand(); rand()], [rand(); rand()] )
 end
 
 for i = 1:num_res
-     println("information",particle[i] )
+     println("information ",particle[i] )
 end
-
-println("second", particle[2].x, particle[2].y, particle[3].z)
+#
+#println("which ", particle[2].coorx, particle[2].gradx[1], particle[2].gradx[2])
