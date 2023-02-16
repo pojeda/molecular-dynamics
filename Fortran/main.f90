@@ -19,9 +19,9 @@ IMPLICIT NONE
    REAL(DP)            :: BOXI                             !1.0/BOXL 
    REAL(DP)            :: EPS_CONST(4,4)                   !ARRAY FOR EPSILON
    REAL(DP)            :: SIGMA_CONST(NUM_RES,NUM_RES)     !ARRAY OF SIGMA
+   REAL(DP)            :: POT_ENER                         !POTENTIAL ENERGY
+   REAL(DP)            :: KIN_ENER                         !KINETIC ENERGY
    CHARACTER*1         :: AMINO(4)=(/'S','C','P','N'/)     !ALPHABET OF FOUR LETTERS        
-   REAL(DP)            :: POT_ENER
-   REAL(DP)            :: KIN_ENER
    
    INTEGER,SAVE        :: O = 1, N = 1                     !INDICES FOR OLD AND NEW CONFIGURATIONS
    
@@ -35,7 +35,6 @@ IMPLICIT NONE
    END TYPE PARTICLE_STRUCTURE
    
    TYPE (PARTICLE_STRUCTURE), SAVE, DIMENSION(NUM_RES) :: PARTICLE
-   TYPE (PARTICLE_STRUCTURE), SAVE, DIMENSION(NUM_RES) :: PARTICLE_FOLDED
 END MODULE PARAMETERS
 
 
@@ -48,10 +47,8 @@ USE Ziggurat
 INTEGER             :: IMAC
 INTEGER             :: P
 INTEGER             :: TMP
-
 REAL(DP)            :: ENER
 
-CHARACTER*40 NAME
 CHARACTER*40 NAME4
 
 IMAC=-35000
@@ -60,9 +57,9 @@ CALL ZIGSET( IMAC )
 
 !READ THE SEQUENCE
 IF(SECU.LT.10) THEN
-   WRITE(NAME4,"('sec_',i1,'.dat')")SECU
+   WRITE(NAME4,"('../Data/sec_',i1,'.dat')")SECU
 ELSE
-   WRITE(NAME4,"('sec_',i2,'.dat')")SECU
+   WRITE(NAME4,"('../Data/sec_',i2,'.dat')")SECU
 ENDIF
 OPEN(55,FILE=NAME4,STATUS='UNKNOWN')
 DO P=1,NUM_RES
@@ -76,7 +73,7 @@ CLOSE(55)
 
         CALL INITIALIZE
 
-        OPEN(88,FILE='ini.dat',STATUS='UNKNOWN')
+        OPEN(88,FILE='../Data/ini.dat',STATUS='UNKNOWN')
                    DO P=1,NUM_RES
                         READ(88,*) PARTICLE(P)%COORX,&
                         PARTICLE(P)%COORY,PARTICLE(P)%COORZ
@@ -311,17 +308,9 @@ DO P=1,NUM_RES
     PARTICLE(P)%COORY=  PARTICLE(P)%COORY
     PARTICLE(P)%COORZ=  PARTICLE(P)%COORZ
 
-    PARTICLE_FOLDED(P)%COORX=  PARTICLE(P)%COORX
-    PARTICLE_FOLDED(P)%COORY=  PARTICLE(P)%COORY
-    PARTICLE_FOLDED(P)%COORZ=  PARTICLE(P)%COORZ
-
     PARTICLE(P)%VELX=  0.001D0*RNOR()
     PARTICLE(P)%VELY=  0.001D0*RNOR()
     PARTICLE(P)%VELZ=  0.001D0*RNOR()
-
-    !PARTICLE(P)%VELX=  PARTICLE(P)%VELX
-    !PARTICLE(P)%VELY=  PARTICLE(P)%VELY
-    !PARTICLE(P)%VELZ=  PARTICLE(P)%VELZ
 
     PARTICLE(P)%GRADX(N)=  0.0D0
     PARTICLE(P)%GRADY(N)=  0.0D0
