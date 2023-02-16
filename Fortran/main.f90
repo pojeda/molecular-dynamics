@@ -14,11 +14,11 @@ IMPLICIT NONE
    REAL(DP),PARAMETER  :: DT=0.0001D0                      !TIME STEP
    REAL(DP)            :: DT2=DT*DT                        !TIME STEP SQUARED
    REAL(DP)            :: DTP5=0.5D0*DT                    !TIME STEP HALFED
-   REAL(DP),PARAMETER  :: BOXL=100.0D0                     !BOX SIZE=BOXL 
-   REAL(DP),PARAMETER  :: KBT_CONST = 0.5D0                ! KB * T 
-   REAL(DP)            :: BOXI                             !1.0/BOXL 
+   REAL(DP),PARAMETER  :: KBT_CONST = 0.5D0                !KB * T 
    REAL(DP)            :: EPS_CONST(4,4)                   !ARRAY FOR EPSILON
    REAL(DP)            :: SIGMA_CONST(NUM_RES,NUM_RES)     !ARRAY OF SIGMA
+   REAL(DP),PARAMETER  :: R_CERO=3.8D0                     !SPRING EQUILIBRIUM SEPARATION
+   REAL(DP),PARAMETER  :: A_CONST=50.0D0                   !SPRING CONSTANT
    REAL(DP)            :: POT_ENER                         !POTENTIAL ENERGY
    REAL(DP)            :: KIN_ENER                         !KINETIC ENERGY
    CHARACTER*1         :: AMINO(4)=(/'S','C','P','N'/)     !ALPHABET OF FOUR LETTERS        
@@ -170,12 +170,8 @@ USE PARAMETERS
 
 REAL(DP)            :: FDUMMY1,FDUMMY2,FDUMMY3,FDUMMY4
 REAL(DP)            :: ENER2
-REAL(DP)            :: R_CERO,A_CONST
 REAL(DP)            :: DISX,DISY,DISZ,DISPX,DISD,DISPY,DISPZ,DISPD
 
-
-R_CERO=3.8D0
-A_CONST=50.0D0
 ENER2=0.0D0
 
 !HARMONIC POTENTIAL
@@ -325,7 +321,6 @@ DO P=1,NUM_RES
 ENDDO
 
 POT_ENER = 0.0
-BOXI = 1.0 / BOXL
 
 END SUBROUTINE INITIALIZE
 
