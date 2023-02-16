@@ -25,3 +25,7 @@ for i = 1:num_res
 end
 #
 #println("which ", particle[2].coorx, particle[2].gradx[1], particle[2].gradx[2])
+
+
+
+

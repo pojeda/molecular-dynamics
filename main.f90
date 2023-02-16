@@ -76,7 +76,7 @@ CLOSE(55)
 
         CALL INITIALIZE
 
-        OPEN(88,FILE='min_0.dat',STATUS='UNKNOWN')
+        OPEN(88,FILE='ini.dat',STATUS='UNKNOWN')
                    DO P=1,NUM_RES
                         READ(88,*) PARTICLE(P)%COORX,&
                         PARTICLE(P)%COORY,PARTICLE(P)%COORZ
@@ -88,27 +88,29 @@ CLOSE(55)
 
         OPEN(88,FILE='KOORDINATEN_1T.xyz',STATUS='UNKNOWN')
 
-!                   WRITE(88,*) NUM_RES
-!                   WRITE(88,*) '  '
-!                   DO P=1,NUM_RES
-!                        WRITE(88,*) 'C', 0.25*PARTICLE(P)%COOR(1),&
-!                        0.25*PARTICLE(P)%COOR(2),0.25*PARTICLE(P)%COOR(3)
-!                   ENDDO
 
 
 !MAIN PART OF MOLECULAR DINAMICS
         N = 2
-        DO NSTEP=1,60000
+        DO NSTEP=1,10000000
 
                CALL UPDATE_VEL_VERLET_COOR
                CALL FORCES
                CALL UPDATE_VEL_VERLET_VEL
                CALL KINETIC
-               write(6,*) POT_ENER, KIN_ENER, POT_ENER + KIN_ENER
 
                TMP = O
                O = N 
                N = TMP
+
+               IF(MOD(NSTEP,10000).EQ.0) THEN 
+                   WRITE(88,*) NUM_RES
+                   WRITE(88,*) '  '
+                   DO P=1,NUM_RES
+                        WRITE(88,*) 'C', PARTICLE(P)%COORX, PARTICLE(P)%COORY,PARTICLE(P)%COORZ
+                   ENDDO
+                   WRITE(6,*) POT_ENER, KIN_ENER, POT_ENER + KIN_ENER
+               ENDIF
 
         ENDDO
         CLOSE(88)
@@ -301,7 +303,7 @@ USE Ziggurat
 INTEGER             :: P
 
 DO P=1,NUM_RES
-    PARTICLE(P)%COORX=  (P-15)*6.5D0
+    PARTICLE(P)%COORX=  (P-15)*4.0D0
     PARTICLE(P)%COORY=  0.0D0
     PARTICLE(P)%COORZ=  0.0D0
 
@@ -313,13 +315,13 @@ DO P=1,NUM_RES
     PARTICLE_FOLDED(P)%COORY=  PARTICLE(P)%COORY
     PARTICLE_FOLDED(P)%COORZ=  PARTICLE(P)%COORZ
 
-    PARTICLE(P)%VELX=  2.0D0*UNI()-1.0D0
-    PARTICLE(P)%VELY=  2.0D0*UNI()-1.0D0
-    PARTICLE(P)%VELZ=  2.0D0*UNI()-1.0D0
+    PARTICLE(P)%VELX=  0.001D0*RNOR()
+    PARTICLE(P)%VELY=  0.001D0*RNOR()
+    PARTICLE(P)%VELZ=  0.001D0*RNOR()
 
-    PARTICLE(P)%VELX=  PARTICLE(P)%VELX
-    PARTICLE(P)%VELY=  PARTICLE(P)%VELY
-    PARTICLE(P)%VELZ=  PARTICLE(P)%VELZ
+    !PARTICLE(P)%VELX=  PARTICLE(P)%VELX
+    !PARTICLE(P)%VELY=  PARTICLE(P)%VELY
+    !PARTICLE(P)%VELZ=  PARTICLE(P)%VELZ
 
     PARTICLE(P)%GRADX(N)=  0.0D0
     PARTICLE(P)%GRADY(N)=  0.0D0
