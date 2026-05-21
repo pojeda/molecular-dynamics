@@ -5,12 +5,10 @@ MODULE PARAMETERS
 IMPLICIT NONE
    INTEGER, PARAMETER  :: NUM_RES=1000                     !NUMBER OF AMINOACIDS IN EACH SEQUENCE
    INTEGER, PARAMETER  :: DP = SELECTED_REAL_KIND(12, 60)
-   INTEGER, PARAMETER  :: TIME=90000                       !TIME OF SIMULATION
-   INTEGER, SAVE       :: NSTEP
-   INTEGER             :: I,J,K,L,M
-   INTEGER, PARAMETER  :: SECU=1                           !THE NUMBER OF SEQUENCE                            
+   INTEGER, PARAMETER  :: NSTEPS=100000                       !TIME OF SIMULATION
+   INTEGER, PARAMETER  :: WRITE_FREQ = 1000                ! FREQUENCY OF WRITING FILES
    REAL(DP),PARAMETER  :: PI=3.141592653589793_DP           !PI CONSTANT
-   REAL(DP),PARAMETER  :: DT=0.0001_DP                      !TIME STEP
+   REAL(DP),PARAMETER  :: DT=0.001_DP                       !TIME STEP
    REAL(DP)            :: DT2=DT*DT                        !TIME STEP SQUARED
    REAL(DP)            :: DTP5=0.5_DP*DT                    !TIME STEP HALFED
    REAL(DP),PARAMETER  :: KBT_CONST = 0.5_DP                !KB * T 
@@ -22,25 +20,13 @@ IMPLICIT NONE
    REAL(DP)            :: KIN_ENER                         !KINETIC ENERGY
    CHARACTER*1         :: AMINO(4)=(/'S','C','P','N'/)     !ALPHABET OF FOUR LETTERS        
    
-   INTEGER,SAVE        :: O = 1, N = 1                     !INDICES FOR OLD AND NEW CONFIGURATIONS
+   INTEGER             :: OLD = 1, NEW = 2                     !INDICES FOR OLD AND NEW CONFIGURATIONS
    
    ! PARTICLE DATA (STRUCTURE OF ARRAYS)
-   REAL(DP), SAVE :: COORX(NUM_RES)
-   REAL(DP), SAVE :: COORY(NUM_RES)
-   REAL(DP), SAVE :: COORZ(NUM_RES)
-   
-   REAL(DP), SAVE :: VELX(NUM_RES)
-   REAL(DP), SAVE :: VELY(NUM_RES)
-   REAL(DP), SAVE :: VELZ(NUM_RES)
-   
-   REAL(DP), SAVE :: GRADX(2,NUM_RES)
-   REAL(DP), SAVE :: GRADY(2,NUM_RES)
-   REAL(DP), SAVE :: GRADZ(2,NUM_RES)
-   
+   REAL(DP), SAVE :: COOR(3,NUM_RES)
+   REAL(DP), SAVE :: VEL(3,NUM_RES)
+   REAL(DP), SAVE :: FORCE(3,2,NUM_RES)
    REAL(DP), SAVE :: MASS(NUM_RES)
-   REAL(DP), SAVE :: CHARGE(NUM_RES)
-   REAL(DP), SAVE :: INERTIA(NUM_RES)
-
 END MODULE PARAMETERS
 
 MODULE RNG_UTILS
@@ -86,66 +72,41 @@ PROGRAM MOLECULAR_DYNAMICS
 
 USE PARAMETERS
 USE RNG_UTILS
+IMPLICIT NONE
+INTEGER             :: NSTEP
 INTEGER             :: P
 INTEGER             :: TMP
 REAL(DP)            :: ENER
 
-CHARACTER*40 NAME4
 
-
-!READ THE SEQUENCE
-!IF(SECU.LT.10) THEN
-!   WRITE(NAME4,"('../Data/sec_',i1,'.dat')")SECU
-!ELSE
-!   WRITE(NAME4,"('../Data/sec_',i2,'.dat')")SECU
-!ENDIF
-!OPEN(55,FILE=NAME4,STATUS='UNKNOWN')
-!DO P=1,NUM_RES
-!    !READ(55,*)	CLASE(P)
-!    CLASE(P) = 4
-!ENDDO
-!CLOSE(55)
-
-
-!ASSIGN THE VALUES FOR THE EPSILONS AND SIGMAS
-
-        CALL INITIALIZE
-
-        !OPEN(88,FILE='../Data/min_0.dat',STATUS='UNKNOWN')
-        !           DO P=1,NUM_RES
-        !                READ(88,*) COORX(P),COORY(P),COORZ(P)
-        !           ENDDO
-        !CLOSE(88)
-
-        CALL FORCES
-
+  CALL init_random_seed()
+  CALL initialize()
+  CALL compute_forces()
 
         OPEN(88,FILE='KOORDINATEN_1T.xyz',STATUS='UNKNOWN')
 
 
 
 !MAIN PART OF MOLECULAR DINAMICS
-        N = 2
-        DO NSTEP=1,10000
+        DO NSTEP=1,NSTEPS
 
-               CALL UPDATE_VEL_VERLET_COOR
-               CALL FORCES
-               CALL UPDATE_VEL_VERLET_VEL
-               CALL KINETIC
+     CALL update_coordinates()
+     CALL compute_forces()
+     CALL update_velocities()
+     CALL kinetic_energy()
 
-               TMP = O
-               O = N 
-               N = TMP
+     tmp = old
+     old = new
+     new = tmp
 
-               IF(MOD(NSTEP,1000).EQ.0) THEN 
-                   WRITE(88,*) NUM_RES
-                   WRITE(88,*) '  '
-                   DO P=1,NUM_RES
-                        WRITE(88,*) 'C', COORX(P), COORY(P),COORZ(P)
-                   ENDDO
-                   WRITE(6,*) POT_ENER, KIN_ENER, POT_ENER + KIN_ENER
-               ENDIF
-
+     IF (MOD(nstep, WRITE_FREQ) == 0) THEN
+        WRITE(88,*) NUM_RES
+        WRITE(88,*) ' '
+        DO p = 1, NUM_RES
+           WRITE(88,*) 'C', coor(1,p), coor(2,p), coor(3,p)
+        ENDDO
+        WRITE(*,*) pot_ener, kin_ener, pot_ener + kin_ener
+     ENDIF
         ENDDO
         CLOSE(88)
 
@@ -153,225 +114,130 @@ END PROGRAM MOLECULAR_DYNAMICS
 
 
 
-SUBROUTINE LENNARD_JONES 
-! SUBROUTINE TO COMPUTE THE LENNARD-JONES POTENTIAL AND FORCE
-! PEDRO OJEDA,  07/MAY/2011
 
-USE PARAMETERS
-REAL(DP)            :: FDUMMY1,FDUMMY2,FDUMMY4,FDUMMY5
-REAL(DP)            :: FDUMMYD,FDUMMYE
-REAL(DP)            :: FTERM
-REAL(DP)            :: ENER1
-REAL(DP)            :: DISX,DISY,DISZ,DISD
 
-ENER1=0.0_DP
+SUBROUTINE compute_forces()
+  USE PARAMETERS
+  IMPLICIT NONE
 
-!VAN DER WAALS CONTRIBUTION
-DO I=1,NUM_RES-2
-     DO J=I+2,NUM_RES
-        DISX=COORX(I)-COORX(J)                          
-        DISY=COORY(I)-COORY(J)                          
-        DISZ=COORZ(I)-COORZ(J)                           
-        DISD=DISX*DISX + DISY*DISY + DISZ*DISZ        
+  force(:,new,:) = 0.0_DP
+  pot_ener = 0.0_DP
+  kin_ener = 0.0_DP
 
-        FDUMMY1=SIGMA_CONST*SIGMA_CONST/DISD
-        FDUMMY2=FDUMMY1*FDUMMY1                             ! POWER 4
-        FDUMMY4=FDUMMY2*FDUMMY1                             ! POWER 6
-        FDUMMY5=FDUMMY4*FDUMMY4                             ! POWER 12
-        FDUMMYD=1.0_DP/DISD                                 ! 1/DISTANCE_IJ^2
-        FDUMMYE=FDUMMY5-FDUMMY4                             ! (SIGMA/R)^12 - (SIGMA/R)^6
-        ENER1=ENER1+EPS_CONST*FDUMMYE                  ! ENERGY = EPSILON*[(SIGMA/R)^12 - (SIGMA/R)^6 ]
-        FTERM=(12.0_DP*FDUMMY5-6.0_DP*FDUMMY4)*FDUMMYD      ! FORCE = -DV/DR = [12*(SIGMA/R)^12 - 6*(SIGMA/R)^6 ]*(1/R^2)
+  CALL spring_force()
+  CALL lennard_jones_force()
+END SUBROUTINE compute_forces
 
-        GRADX(N,I)=GRADX(N,I)+EPS_CONST*FTERM*DISX   ! X COMPONENT OF THE GRADIENT
-        GRADY(N,I)=GRADY(N,I)+EPS_CONST*FTERM*DISY   ! Y COMPONENT OF THE GRADIENT
-        GRADZ(N,I)=GRADZ(N,I)+EPS_CONST*FTERM*DISZ   ! Z COMPONENT OF THE GRADIENT
-        GRADX(N,J)=GRADX(N,J)-EPS_CONST*FTERM*DISX   ! X COMPONENT OF THE GRADIENT
-        GRADY(N,J)=GRADY(N,J)-EPS_CONST*FTERM*DISY   ! Y COMPONENT OF THE GRADIENT
-        GRADZ(N,J)=GRADZ(N,J)-EPS_CONST*FTERM*DISZ   ! Z COMPONENT OF THE GRADIENT
+SUBROUTINE lennard_jones_force()
+  USE PARAMETERS
+  IMPLICIT NONE
+
+  INTEGER :: i, j
+  REAL(DP) :: rij(3), r2
+  REAL(DP) :: sr2, sr4, sr6, sr12
+  REAL(DP) :: fterm, eij
+
+  DO i = 1, NUM_RES-2
+     DO j = i+2, NUM_RES
+
+        rij = coor(:,i) - coor(:,j)
+        r2 = SUM(rij*rij)
+
+        sr2  = SIGMA_CONST*SIGMA_CONST/r2
+        sr4  = sr2*sr2
+        sr6  = sr4*sr2
+        sr12 = sr6*sr6
+
+        eij = EPS_CONST*(sr12 - sr6)
+        fterm = EPS_CONST*(12.0_DP*sr12 - 6.0_DP*sr6)/r2
+
+        pot_ener = pot_ener + eij
+
+        force(:,new,i) = force(:,new,i) + fterm*rij
+        force(:,new,j) = force(:,new,j) - fterm*rij
+
      ENDDO
-ENDDO
+  ENDDO
 
-POT_ENER = POT_ENER + ENER1
+END SUBROUTINE lennard_jones_force
 
-END SUBROUTINE LENNARD_JONES
+SUBROUTINE spring_force()
+  USE PARAMETERS
+  IMPLICIT NONE
 
+  INTEGER :: i
+  REAL(DP) :: rij(3), r, dr, fij(3)
 
-SUBROUTINE SPRING 
-! SUBROUTINE TO COMPUTE THE HARMONIC OSCILLATOR POTENTIAL AND FORCE
-! PEDRO OJEDA,  07/MAY/2011
+  DO i = 1, NUM_RES-1
 
-USE PARAMETERS
+     rij = coor(:,i) - coor(:,i+1)
+     r = SQRT(SUM(rij*rij))
+     dr = r - R_CERO
 
-REAL(DP)            :: FDUMMY1,FDUMMY2,FDUMMY3,FDUMMY4
-REAL(DP)            :: ENER2
-REAL(DP)            :: DISX,DISY,DISZ,DISPX,DISD,DISPY,DISPZ,DISPD
+     pot_ener = pot_ener + A_CONST*dr*dr
 
-ENER2=0.0_DP
+     fij = -2.0_DP*A_CONST*dr*rij/r
 
-!HARMONIC POTENTIAL
-FDUMMY3=2.0_DP*A_CONST
+     force(:,new,i)   = force(:,new,i)   + fij
+     force(:,new,i+1) = force(:,new,i+1) - fij
 
-DO I=2,NUM_RES-1
-    DISX=COORX(I)-COORX(I+1)                          
-    DISY=COORY(I)-COORY(I+1)                          
-    DISZ=COORZ(I)-COORZ(I+1)                           
-    DISD=SQRT(DISX*DISX + DISY*DISY + DISZ*DISZ)        
+  ENDDO
 
-    DISPX=COORX(I)-COORX(I-1)                          
-    DISPY=COORY(I)-COORY(I-1)                          
-    DISPZ=COORZ(I)-COORZ(I-1)                           
-    DISPD=SQRT(DISPX*DISPX + DISPY*DISPY + DISPZ*DISPZ)       
+END SUBROUTINE spring_force
 
-    FDUMMY1=(DISD-R_CERO)
-    FDUMMY2=FDUMMY1*FDUMMY1
-    ENER2=ENER2+FDUMMY2
-    FDUMMY4=(DISPD-R_CERO)
-    GRADX(N,I)=GRADX(N,I)-FDUMMY3*DISX*FDUMMY1/DISD - FDUMMY3*DISPX*FDUMMY4/DISPD
-    GRADY(N,I)=GRADY(N,I)-FDUMMY3*DISY*FDUMMY1/DISD - FDUMMY3*DISPY*FDUMMY4/DISPD
-    GRADZ(N,I)=GRADZ(N,I)-FDUMMY3*DISZ*FDUMMY1/DISD - FDUMMY3*DISPZ*FDUMMY4/DISPD
-ENDDO
+SUBROUTINE update_coordinates()
+  USE PARAMETERS
+  IMPLICIT NONE
 
+  INTEGER :: p
 
-    DISX=COORX(1)-COORX(2)                          
-    DISY=COORY(1)-COORY(2)                          
-    DISZ=COORZ(1)-COORZ(2)                           
-    DISD=SQRT(DISX*DISX + DISY*DISY + DISZ*DISZ)       
-    FDUMMY1=DISD-R_CERO
-    FDUMMY2=FDUMMY1*FDUMMY1
-    ENER2=ENER2+FDUMMY2
-    GRADX(N,1)=GRADX(N,1)-FDUMMY3*DISX*FDUMMY1/DISD
-    GRADY(N,1)=GRADY(N,1)-FDUMMY3*DISY*FDUMMY1/DISD
-    GRADZ(N,1)=GRADZ(N,1)-FDUMMY3*DISZ*FDUMMY1/DISD
+  DO p = 1, NUM_RES
+     coor(:,p) = coor(:,p) + DT*vel(:,p) + 0.5_DP*DT2*force(:,old,p)/mass(p)
+  ENDDO
+END SUBROUTINE update_coordinates
 
+SUBROUTINE update_velocities()
+  USE PARAMETERS
+  IMPLICIT NONE
 
-    DISX=COORX(NUM_RES)-COORX(NUM_RES-1)                          
-    DISY=COORY(NUM_RES)-COORY(NUM_RES-1)                          
-    DISZ=COORZ(NUM_RES)-COORZ(NUM_RES-1)                           
-    DISD=SQRT(DISX*DISX + DISY*DISY + DISZ*DISZ)       
-    FDUMMY1=DISD-R_CERO
-    GRADX(N,NUM_RES)=GRADX(N,NUM_RES)-FDUMMY3*DISX*FDUMMY1/DISD
-    GRADY(N,NUM_RES)=GRADY(N,NUM_RES)-FDUMMY3*DISY*FDUMMY1/DISD
-    GRADZ(N,NUM_RES)=GRADZ(N,NUM_RES)-FDUMMY3*DISZ*FDUMMY1/DISD
+  INTEGER :: p
 
-POT_ENER = POT_ENER + A_CONST*ENER2
+  DO p = 1, NUM_RES
+     vel(:,p) = vel(:,p) + DTP5*(force(:,new,p) + force(:,old,p))/mass(p)
+  ENDDO
+END SUBROUTINE update_velocities
 
-END SUBROUTINE SPRING
+SUBROUTINE kinetic_energy()
+  USE PARAMETERS
+  IMPLICIT NONE
 
+  INTEGER :: p
 
-SUBROUTINE KINETIC 
-! SUBROUTINE TO COMPUTE THE KINETIC ENERGY
-! PEDRO OJEDA,  17/SEP/2021
+  kin_ener = 0.0_DP
 
-USE PARAMETERS
+  DO p = 1, NUM_RES
+     kin_ener = kin_ener + mass(p)*SUM(vel(:,p)*vel(:,p))
+  ENDDO
 
-REAL(DP)            :: ENER2
+  kin_ener = 0.5_DP*kin_ener
+END SUBROUTINE kinetic_energy
 
-ENER2=0.0_DP
+SUBROUTINE initialize()
+  USE PARAMETERS
+  USE RNG_UTILS
+  IMPLICIT NONE
 
-DO I=1,NUM_RES
-      ENER2 = ENER2 + VELX(I)**2 + VELY(I)**2 + VELZ(I)**2 
-ENDDO
+  INTEGER :: p
 
-      KIN_ENER = 0.5_DP*ENER2
+  DO p = 1, NUM_RES
+     coor(:,p) = [ (p-15)*4.0_DP, 0.0_DP, 0.0_DP ]
+     vel(:,p)  = [ randn(), randn(), randn() ]
+     force(:,:,p) = 0.0_DP
+     mass(p) = 1.0_DP
+  ENDDO
 
-END SUBROUTINE KINETIC
+  pot_ener = 0.0_DP
+  kin_ener = 0.0_DP
+END SUBROUTINE initialize
 
-
-SUBROUTINE FORCES
-! SUBROUTINE TO CALCULATE THE FORCES DEPENDING ON THE INTERACTIONS DESIRED
-! PEDRO OJEDA,  07/MAY/2011
-
-USE PARAMETERS 
-
-  CALL INITIALIZE_GRAD
-  CALL SPRING
-  CALL LENNARD_JONES
-
-END SUBROUTINE FORCES
-
-
-SUBROUTINE UPDATE_VEL_VERLET_COOR
-! SUBROUTINE TO UPDATE THE VELOCITIES BY MEANS OF THE VELOCITY VERLET ALGORITHM
-! PEDRO OJEDA,  17/SEP/2021
-USE PARAMETERS
-INTEGER             :: P
-
-DO P=1,NUM_RES
-      COORX(P) = COORX(P) + DT*VELX(P) + 0.5_DP*DT2*GRADX(O,P) 
-      COORY(P) = COORY(P) + DT*VELY(P) + 0.5_DP*DT2*GRADY(O,P) 
-      COORZ(P) = COORZ(P) + DT*VELZ(P) + 0.5_DP*DT2*GRADZ(O,P)
-ENDDO
-
-END SUBROUTINE UPDATE_VEL_VERLET_COOR
-
-
-SUBROUTINE UPDATE_VEL_VERLET_VEL
-! SUBROUTINE TO UPDATE THE VELOCITIES BY MEANS OF THE VELOCITY VERLET ALGORITHM
-! PEDRO OJEDA,  17/SEP/2021
-USE PARAMETERS
-INTEGER             :: P
-
-DO P=1,NUM_RES
-    VELX(P) = VELX(P) + DTP5 * ( GRADX(N,P) + GRADX(O,P) )
-    VELY(P) = VELY(P) + DTP5 * ( GRADY(N,P) + GRADY(O,P) )
-    VELZ(P) = VELZ(P) + DTP5 * ( GRADZ(N,P) + GRADZ(O,P) )
-ENDDO
-
-END SUBROUTINE UPDATE_VEL_VERLET_VEL
-
-
-SUBROUTINE INITIALIZE
-! SUBROUTINE TO INITIALIZE THE COORDINATES, VELOCITIES AND GRADIENT
-! PEDRO OJEDA,  07/MAY/2011
-
-USE PARAMETERS
-USE RNG_UTILS
-
-INTEGER             :: P
-
-DO P=1,NUM_RES
-    COORX(P)=  (P-15)*4.0_DP
-    COORY(P)=  0.0_DP
-    COORZ(P)=  0.0_DP
-
-    VELX(P)=  1.0_DP*RANDN()
-    VELY(P)=  1.0_DP*RANDN()
-    VELZ(P)=  1.0_DP*RANDN()
-
-    GRADX(N,P)=  0.0_DP
-    GRADY(N,P)=  0.0_DP
-    GRADZ(N,P)=  0.0_DP
-
-    GRADX(O,P)=  0.0_DP
-    GRADY(O,P)=  0.0_DP
-    GRADZ(O,P)=  0.0_DP
-
-    MASS(P)=  1.0_DP
-
-ENDDO
-
-POT_ENER = 0.0
-
-END SUBROUTINE INITIALIZE
-
-
-SUBROUTINE INITIALIZE_GRAD
-! SUBROUTINE TO INITIALIZE THE GRADIENT AND POTENTIAL ENERGY
-! PEDRO OJEDA,  07/MAY/2011
-
-USE PARAMETERS
-
-INTEGER             :: P
-
-DO P=1,NUM_RES
-    GRADX(N,P)=  0.0
-    GRADY(N,P)=  0.0
-    GRADZ(N,P)=  0.0
-ENDDO
-
-POT_ENER = 0.0_DP         
-KIN_ENER = 0.0_DP           
-
-END SUBROUTINE INITIALIZE_GRAD
 
