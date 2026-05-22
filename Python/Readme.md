@@ -4,6 +4,7 @@ source vpyenv-python-course/bin/activate
 ml GCC/11.2.0 OpenMPI/4.1.1
 pip install mpi4py 
 pip install numpy 
+pip install numba
 
 python md_serial.py
 mpirun -np 10 md_mpi_p2p.py

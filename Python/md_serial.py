@@ -1,10 +1,12 @@
+from numba import njit
+import math
 import numpy as np
 import time
 
 # Parameters
 NUM_RES = 1000
-NSTEPS = 100
-WRITE_FREQ = 10
+NSTEPS = 10000
+WRITE_FREQ = 1000
 
 DT = 0.001
 DT2 = DT * DT
@@ -42,55 +44,75 @@ def initialize():
     kin_ener = 0.0
 
 
-def spring_force():
-    global pot_ener
+@njit
+def compute_forces_numba(coor, force_new):
+    pot = 0.0
+    force_new[:, :] = 0.0
 
+    # Spring forces
     for i in range(NUM_RES - 1):
-        rij = coor[i] - coor[i + 1]
-        r = np.linalg.norm(rij)
+        dx = coor[i, 0] - coor[i + 1, 0]
+        dy = coor[i, 1] - coor[i + 1, 1]
+        dz = coor[i, 2] - coor[i + 1, 2]
+
+        r = math.sqrt(dx*dx + dy*dy + dz*dz)
         dr = r - R_CERO
 
-        pot_ener += A_CONST * dr * dr
+        pot += A_CONST * dr * dr
 
-        fij = -2.0 * A_CONST * dr * rij / r
+        f = -2.0 * A_CONST * dr / r
 
-        force[NEW, i] += fij
-        force[NEW, i + 1] -= fij
+        fx = f * dx
+        fy = f * dy
+        fz = f * dz
 
+        force_new[i, 0] += fx
+        force_new[i, 1] += fy
+        force_new[i, 2] += fz
 
-def lennard_jones_force():
-    global pot_ener
+        force_new[i + 1, 0] -= fx
+        force_new[i + 1, 1] -= fy
+        force_new[i + 1, 2] -= fz
 
     sigma2 = SIGMA_CONST * SIGMA_CONST
 
+    # Lennard-Jones forces
     for i in range(NUM_RES - 2):
         for j in range(i + 2, NUM_RES):
-            rij = coor[i] - coor[j]
-            r2 = np.dot(rij, rij)
+            dx = coor[i, 0] - coor[j, 0]
+            dy = coor[i, 1] - coor[j, 1]
+            dz = coor[i, 2] - coor[j, 2]
+
+            r2 = dx*dx + dy*dy + dz*dz
 
             sr2 = sigma2 / r2
             sr4 = sr2 * sr2
             sr6 = sr4 * sr2
             sr12 = sr6 * sr6
 
-            eij = EPS_CONST * (sr12 - sr6)
+            pot += EPS_CONST * (sr12 - sr6)
+
             fterm = EPS_CONST * (12.0 * sr12 - 6.0 * sr6) / r2
 
-            pot_ener += eij
+            fx = fterm * dx
+            fy = fterm * dy
+            fz = fterm * dz
 
-            force[NEW, i] += fterm * rij
-            force[NEW, j] -= fterm * rij
+            force_new[i, 0] += fx
+            force_new[i, 1] += fy
+            force_new[i, 2] += fz
 
+            force_new[j, 0] -= fx
+            force_new[j, 1] -= fy
+            force_new[j, 2] -= fz
+
+    return pot
 
 def compute_forces():
     global pot_ener, kin_ener
 
-    force[NEW, :, :] = 0.0
-    pot_ener = 0.0
+    pot_ener = compute_forces_numba(coor, force[NEW])
     kin_ener = 0.0
-
-    spring_force()
-    lennard_jones_force()
 
 
 def update_coordinates():

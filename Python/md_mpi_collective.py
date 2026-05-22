@@ -1,3 +1,5 @@
+from numba import njit
+import math
 import numpy as np
 import time
 from mpi4py import MPI
@@ -7,8 +9,8 @@ rank = comm.Get_rank()
 size = comm.Get_size()
 
 NUM_RES = 1000
-NSTEPS = 100
-WRITE_FREQ = 10
+NSTEPS = 10000
+WRITE_FREQ = 1000
 
 DT = 0.001
 DT2 = DT * DT
@@ -79,35 +81,47 @@ def initialize():
     pot_ener = 0.0
     kin_ener = 0.0
 
+@njit
+def compute_local_forces_numba(coor, force_slot, istart, iend):
+    pot = 0.0
+    force_slot[istart:iend, :] = 0.0
 
-def spring_force(slot):
-    global pot_ener
-
+    # Spring force
     for i in range(istart, iend):
 
         if i < NUM_RES - 1:
-            rij = coor[i] - coor[i + 1]
-            r = np.linalg.norm(rij)
+            dx = coor[i, 0] - coor[i + 1, 0]
+            dy = coor[i, 1] - coor[i + 1, 1]
+            dz = coor[i, 2] - coor[i + 1, 2]
+
+            r = math.sqrt(dx*dx + dy*dy + dz*dz)
             dr = r - R_CERO
 
-            fij = -2.0 * A_CONST * dr * rij / r
-            force[slot, i] += fij
+            f = -2.0 * A_CONST * dr / r
 
-            pot_ener += A_CONST * dr * dr
+            force_slot[i, 0] += f * dx
+            force_slot[i, 1] += f * dy
+            force_slot[i, 2] += f * dz
+
+            pot += A_CONST * dr * dr
 
         if i > 0:
-            rij = coor[i] - coor[i - 1]
-            r = np.linalg.norm(rij)
+            dx = coor[i, 0] - coor[i - 1, 0]
+            dy = coor[i, 1] - coor[i - 1, 1]
+            dz = coor[i, 2] - coor[i - 1, 2]
+
+            r = math.sqrt(dx*dx + dy*dy + dz*dz)
             dr = r - R_CERO
 
-            fij = -2.0 * A_CONST * dr * rij / r
-            force[slot, i] += fij
+            f = -2.0 * A_CONST * dr / r
 
-def lennard_jones_force(slot):
-    global pot_ener
+            force_slot[i, 0] += f * dx
+            force_slot[i, 1] += f * dy
+            force_slot[i, 2] += f * dz
 
     sigma2 = SIGMA_CONST * SIGMA_CONST
 
+    # Lennard-Jones force
     for i in range(istart, iend):
         for j in range(NUM_RES):
 
@@ -116,33 +130,33 @@ def lennard_jones_force(slot):
             if abs(j - i) <= 1:
                 continue
 
-            rij = coor[i] - coor[j]
-            r2 = np.dot(rij, rij)
+            dx = coor[i, 0] - coor[j, 0]
+            dy = coor[i, 1] - coor[j, 1]
+            dz = coor[i, 2] - coor[j, 2]
+
+            r2 = dx*dx + dy*dy + dz*dz
 
             sr2 = sigma2 / r2
             sr4 = sr2 * sr2
             sr6 = sr4 * sr2
             sr12 = sr6 * sr6
 
-            eij = EPS_CONST * (sr12 - sr6)
             fterm = EPS_CONST * (12.0 * sr12 - 6.0 * sr6) / r2
 
-            force[slot, i] += fterm * rij
+            force_slot[i, 0] += fterm * dx
+            force_slot[i, 1] += fterm * dy
+            force_slot[i, 2] += fterm * dz
 
             if j > i + 1:
-                pot_ener += eij
+                pot += EPS_CONST * (sr12 - sr6)
 
+    return pot
 
 def compute_forces(slot):
     global pot_ener, kin_ener
 
-    force[slot, istart:iend, :] = 0.0
-    pot_ener = 0.0
+    pot_ener = compute_local_forces_numba(coor, force[slot], istart, iend)
     kin_ener = 0.0
-
-    spring_force(slot)
-    lennard_jones_force(slot)
-
 
 def update_coordinates():
     coor[istart:iend] += (
@@ -158,14 +172,22 @@ def update_velocities():
         / mass[istart:iend, None]
     )
 
+@njit
+def kinetic_energy_numba(vel, mass, istart, iend):
+    kin = 0.0
+
+    for i in range(istart, iend):
+        kin += mass[i] * (
+            vel[i, 0] * vel[i, 0]
+            + vel[i, 1] * vel[i, 1]
+            + vel[i, 2] * vel[i, 2]
+        )
+
+    return 0.5 * kin
 
 def kinetic_energy():
     global kin_ener
-
-    local_vel = vel[istart:iend]
-    local_mass = mass[istart:iend]
-
-    kin_ener = 0.5 * np.sum(local_mass[:, None] * local_vel * local_vel)
+    kin_ener = kinetic_energy_numba(vel, mass, istart, iend)
 
 def exchange_coordinates_collective():
     sendbuf = np.ascontiguousarray(coor[istart:iend].ravel())
