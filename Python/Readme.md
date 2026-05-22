@@ -1,0 +1,6 @@
+ml GCCcore/11.2.0 Python/3.9.6
+python -m venv vpyenv-python-course
+source vpyenv-python-course/bin/activate  
+ml GCC/11.2.0 OpenMPI/4.1.1
+pip install mpi4py 
+pip install numpy 
