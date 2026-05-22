@@ -7,8 +7,8 @@ rank = comm.Get_rank()
 size = comm.Get_size()
 
 NUM_RES = 1000
-NSTEPS = 1000
-WRITE_FREQ = 100
+NSTEPS = 100
+WRITE_FREQ = 10
 
 DT = 0.001
 DT2 = DT * DT
