@@ -2,28 +2,31 @@ from numba import njit
 import math
 import numpy as np
 import time
+# MPI initialization
 from mpi4py import MPI
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-NUM_RES = 1000
-NSTEPS = 10000
-WRITE_FREQ = 1000
+# Parameters for the simulation
+NUM_RES = 1000      # Number of residues for the polymer
+NSTEPS = 10000      # Number of simulation steps for the Newton's differential equation
+WRITE_FREQ = 1000   # Frequency of writing energies and coordinates
 
-DT = 0.001
-DT2 = DT * DT
-DTP5 = 0.5 * DT
+DT = 0.001          # Time step 
+DT2 = DT * DT       # Time step squared
+DTP5 = 0.5 * DT     # Half of time step
 
-EPS_CONST = 40.0
-SIGMA_CONST = 6.5
-R_CERO = 3.8
-A_CONST = 50.0
+EPS_CONST = 40.0    # Epsilon constant for Lennard Jones potential
+SIGMA_CONST = 6.5   # Sigma constant for Lennard Jones potential
+R_CERO = 3.8        # equilibrium distance for the spring poteintal
+A_CONST = 50.0      # force constant for the spring potential
 
 OLD = 0
 NEW = 1
 
+# Arrays for coordinates, velocities, forces, and masses
 coor = np.zeros((NUM_RES, 3), dtype=np.float64)
 vel = np.zeros((NUM_RES, 3), dtype=np.float64)
 force = np.zeros((2, NUM_RES, 3), dtype=np.float64)
@@ -80,6 +83,7 @@ def initialize():
 
     pot_ener = 0.0
     kin_ener = 0.0
+
 
 @njit
 def compute_local_forces_numba(coor, force_slot, istart, iend):
@@ -177,11 +181,11 @@ def kinetic_energy_numba(vel, mass, istart, iend):
     kin = 0.0
 
     for i in range(istart, iend):
-        kin += mass[i] * (
-            vel[i, 0] * vel[i, 0]
-            + vel[i, 1] * vel[i, 1]
-            + vel[i, 2] * vel[i, 2]
-        )
+        vx = vel[i, 0]
+        vy = vel[i, 1]
+        vz = vel[i, 2]
+
+        kin += mass[i] * (vx*vx + vy*vy + vz*vz)
 
     return 0.5 * kin
 
@@ -196,7 +200,6 @@ def exchange_coordinates_collective():
         sendbuf,
         [coor.ravel(), counts, displs, MPI.DOUBLE]
     )
-
 
 
 
