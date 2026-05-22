@@ -6,7 +6,6 @@ NUM_RES = 1000
 NSTEPS = 1000
 WRITE_FREQ = 100
 
-PI = np.pi
 DT = 0.001
 DT2 = DT * DT
 DTP5 = 0.5 * DT

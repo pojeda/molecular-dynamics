@@ -80,15 +80,6 @@ def initialize():
     kin_ener = 0.0
 
 
-def exchange_coordinates_collective():
-    sendbuf = np.ascontiguousarray(coor[istart:iend].ravel())
-
-    comm.Allgatherv(
-        sendbuf,
-        [coor.ravel(), counts, displs, MPI.DOUBLE]
-    )
-
-
 def spring_force(slot):
     global pot_ener
 
@@ -111,7 +102,6 @@ def spring_force(slot):
 
             fij = -2.0 * A_CONST * dr * rij / r
             force[slot, i] += fij
-
 
 def lennard_jones_force(slot):
     global pot_ener
@@ -176,6 +166,18 @@ def kinetic_energy():
     local_mass = mass[istart:iend]
 
     kin_ener = 0.5 * np.sum(local_mass[:, None] * local_vel * local_vel)
+
+def exchange_coordinates_collective():
+    sendbuf = np.ascontiguousarray(coor[istart:iend].ravel())
+
+    comm.Allgatherv(
+        sendbuf,
+        [coor.ravel(), counts, displs, MPI.DOUBLE]
+    )
+
+
+
+
 
 
 def sum_energies_collective():

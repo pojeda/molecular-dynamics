@@ -67,20 +67,6 @@ def initialize():
     kin_ener = 0.0
 
 
-def exchange_coordinates():
-    for src in range(size):
-        s, e = get_range(NUM_RES, src, size)
-
-        if rank == src:
-            sendbuf = np.ascontiguousarray(coor[s:e])
-
-            for dest in range(size):
-                if dest != src:
-                    comm.Send(sendbuf, dest=dest, tag=100 + src)
-        else:
-            comm.Recv(coor[s:e], source=src, tag=100 + src)
-
-
 def spring_force(slot):
     global pot_ener
 
@@ -103,7 +89,6 @@ def spring_force(slot):
 
             fij = -2.0 * A_CONST * dr * rij / r
             force[slot, i] += fij
-
 
 def lennard_jones_force(slot):
     global pot_ener
@@ -168,6 +153,20 @@ def kinetic_energy():
     local_mass = mass[istart:iend]
 
     kin_ener = 0.5 * np.sum(local_mass[:, None] * local_vel * local_vel)
+
+def exchange_coordinates():
+    for src in range(size):
+        s, e = get_range(NUM_RES, src, size)
+
+        if rank == src:
+            sendbuf = np.ascontiguousarray(coor[s:e])
+
+            for dest in range(size):
+                if dest != src:
+                    comm.Send(sendbuf, dest=dest, tag=100 + src)
+        else:
+            comm.Recv(coor[s:e], source=src, tag=100 + src)
+
 
 
 def sum_energies():
